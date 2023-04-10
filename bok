@@ -1,0 +1,40 @@
+print_today_lines() {
+  current_date=$(date '+%Y-%m-%d')
+  list=""
+  while IFS= read -r line; do
+    if [[ "$line" == "$current_date"* ]]; then
+      # Print the original line
+      list="$list book/$(echo "$line" | cut -d" " -f3-)"
+
+      # Split the line into an array of words
+      words=($line)
+
+      # Extract the number from the second word and multiply by 2
+      num=$((${words[1]} * 2))
+      if [[ $((${words[1]} * 2)) -eq 0 ]];then
+          num=1
+      fi
+
+      echo $num
+      # Add the modified number to the date in the first word
+      new_date=$(date '+%Y-%m-%d' -d "$current_date + $num days")
+      words[0]=$new_date
+      words[1]=$num
+
+      # Join the modified words back into a single line
+      new_line="${words[@]}"
+
+      # Write the modified line back to the file
+      sed -i "s|$line|$new_line|" "$HOME/.cache/book"
+
+      # Print the modified line
+    fi
+  done < "$HOME/.cache/book"
+
+  if [[ $list != "" ]]
+    then
+      mpv --no-config --pause $list
+  fi
+}
+
+print_today_lines
