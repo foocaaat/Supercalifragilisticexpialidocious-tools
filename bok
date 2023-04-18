@@ -1,10 +1,11 @@
 #!/usr/bin/bash
 
-print_today_lines() {
+new() {
   current_date=$(date '+%Y-%m-%d')
-  list=""
+  count=0
   while IFS= read -r line; do
-    if [[ "$line" == *"$current_date"* ]]; then
+    if [[ "$line" == "null"* ]]; then
+        count=$((count+1))
       # Print the original line
       list="$list book/$(echo "$line" | cut -d" " -f3-)"
 
@@ -30,13 +31,60 @@ print_today_lines() {
       sed -i "s|$line|$new_line|" "$HOME/.cache/book"
 
       # Print the modified line
+      if [ $count == $1 ];then
+      break
+      fi
     fi
   done < "$HOME/.cache/book"
-
-  if [[ $list != "" ]]
-    then
-      mpv --no-config --pause $list
-  fi
 }
 
-print_today_lines
+reviews() {
+  current_date=$(date '+%Y-%m-%d')
+  while IFS= read -r line; do
+    current_date_seconds=$(date -d "$current_date" +%s)
+    line_date=$(echo "$line" | cut -d ' ' -f 1)
+    if date -d "$line_date" >/dev/null 2>&1; then
+        line_date_seconds=$(date -d "$line_date" +%s)
+    else
+        line_date_seconds=9999999999
+    fi
+
+    if [ $line_date_seconds -le $current_date_seconds ]; then
+      # Print the original line
+      list="$list book/$(echo "$line" | cut -d" " -f3-)"
+
+      # Split the line into an array of words
+      words=($line)
+
+      # Extract the number from the second word and multiply by 2
+      num=$((${words[1]} * 2))
+      if [[ $((${words[1]} * 2)) -eq 0 ]];then
+          num=1
+      fi
+
+      echo $num
+      # Add the modified number to the date in the first word
+      new_date=$(date '+%Y-%m-%d' -d "$line_date + $num days")
+      words[0]=$new_date
+      words[1]=$num
+
+      # Join the modified words back into a single line
+      new_line="${words[@]}"
+
+      # Write the modified line back to the file
+      sed -i "s|$line|$new_line|" "$HOME/.cache/book"
+
+      # Print the modified line
+    fi
+  done < "$HOME/.cache/book"
+}
+
+list=""
+
+new 1
+reviews
+
+if [[ $list != "" ]]
+then
+  mpv --no-config --pause $list
+fi
