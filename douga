@@ -22,7 +22,7 @@ print_today_lines() {
   current_date=$(date '+%Y-%m-%d')
   list=""
   while IFS= read -r line; do
-    if [[ "$line" == *"$current_date"* ]]; then
+    if [[ "$line" == "$current_date"* ]]; then
       # Print the original line
       list=$list,$(echo "$line" | cut -d" " -f3-)
 
