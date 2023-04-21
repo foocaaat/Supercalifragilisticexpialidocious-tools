@@ -14,7 +14,7 @@ if [ -n "$1" ]; then
 
   current_date=$(cat $HOME/.cache/morning)
   future_date=$(date '+%Y-%m-%d' -d "$current_date + 1 days")
-  echo "$future_date 1 $(get_youtube_id $1)" $current_date>> "$HOME/.cache/douga"
+  echo "$future_date 1 $(get_youtube_id $1)" rcurrent_date>> "$HOME/.cache/douga"
   echo "Added '$1' to douga file."
   exit
 fi
@@ -61,6 +61,7 @@ print_today_lines() {
   if [[ $list != "" ]]
     then
   echo https://www.youtube.com/watch_videos?video_ids=$(echo $list | cut -c 2-) 
+  librewolf --new-tab https://www.youtube.com/watch_videos?video_ids=$(echo $list | cut -c 2-) 
   fi
 }
 
