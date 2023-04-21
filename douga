@@ -12,19 +12,27 @@ if [ -n "$1" ]; then
     touch "$HOME/.cache/douga"
   fi
 
-  future_date=$(date '+%Y-%m-%d' -d "+1 days")
-  echo "$future_date 1 $(get_youtube_id $1)" >> "$HOME/.cache/douga"
+  current_date=$(cat $HOME/.cache/morning)
+  future_date=$(date '+%Y-%m-%d' -d "$current_date + 1 days")
+  echo "$future_date 1 $(get_youtube_id $1)" $current_date>> "$HOME/.cache/douga"
   echo "Added '$1' to douga file."
   exit
 fi
 
 print_today_lines() {
-  current_date=$(date '+%Y-%m-%d')
+  current_date=$(cat $HOME/.cache/morning)
   list=""
   while IFS= read -r line; do
-    if [[ "$line" == "$current_date"* ]]; then
+    current_date_seconds=$(date -d "$current_date" +%s)
+    line_date=$(echo "$line" | cut -d ' ' -f 1)
+    if date -d "$line_date" >/dev/null 2>&1; then
+        line_date_seconds=$(date -d "$line_date" +%s)
+    else
+        line_date_seconds=9999999999
+    fi
+    if [ $line_date_seconds -le $current_date_seconds ]; then
       # Print the original line
-      list=$list,$(echo "$line" | cut -d" " -f3-)
+      list=$list,$(echo "$line" | awk '{print $3}')
 
       # Split the line into an array of words
       words=($line)
@@ -36,7 +44,7 @@ print_today_lines() {
       fi
 
       # Add the modified number to the date in the first word
-      new_date=$(date '+%Y-%m-%d' -d "$current_date + $num days")
+      new_date=$(date '+%Y-%m-%d' -d "$(echo "$line" | cut -d ' ' -f 1) + $num days")
       words[0]=$new_date
       words[1]=$num
 
@@ -53,7 +61,6 @@ print_today_lines() {
   if [[ $list != "" ]]
     then
   echo https://www.youtube.com/watch_videos?video_ids=$(echo $list | cut -c 2-) 
-  librewolf --new-tab https://www.youtube.com/watch_videos?video_ids=$(echo $list | cut -c 2-) 
   fi
 }
 
